@@ -8,30 +8,76 @@ This take-home is a small version of that job.
 
 More and more shoppers start in ChatGPT and Claude. A store we work with wants shoppers to find products, build a cart, and check out without leaving the chat.
 
-The store runs on Shopify. For this exercise, use Shopify's demo store, **mock.shop**:
-
-- API: `https://mock.shop/api` (Shopify Storefront API, GraphQL). No account or key needed.
-- See the store and try queries: [mock.shop](https://mock.shop)
+The store runs on Shopify. For this exercise, use Shopify's demo store, **mock.shop**.
 
 **Your job is to build an MCP server for this store, connect it to Claude or ChatGPT, and make shopping in the chat work well, and safely.**
 
-## What to build
+## The store API
 
-1. An MCP server on top of the mock.shop API.
-2. You decide which tools it has. Design them for an AI to use, not as a copy of the API.
-3. Put it on the internet (HTTPS) so Claude or ChatGPT can reach it. Any host is fine.
-4. Connect it to Claude (custom connector) or ChatGPT (developer mode) and use it there.
+- Address: `https://mock.shop/api`. It's the Shopify Storefront API (GraphQL).
+- No account, key, or token needed.
+- Try it:
 
-In a normal chat, a shopper should be able to:
+  ```bash
+  curl https://mock.shop/api -H 'Content-Type: application/json' \
+    -d '{"query":"{ products(first: 3) { edges { node { title } } } }"}'
+  ```
 
-- find products by describing what they want ("something warm for winter under $100"),
-- see details, and which sizes and colors are in stock,
-- compare a few options,
-- build and change a cart,
-- get a checkout link,
-- ask about returns and shipping.
+- Try queries in your browser at [mock.shop](https://mock.shop).
+- Reference: [Shopify Storefront API docs](https://shopify.dev/docs/api/storefront).
 
-Use any language and any MCP library you like.
+## What your MCP server should do
+
+### What shoppers can do
+
+1. **Find products** by describing what they want, like "something warm for winter under $100". Results should match what the shopper meant, not just the words they typed. Shoppers can narrow by price, category, size, color, and stock.
+2. **See product details:** description, price, every size and color, and whether each one is in stock.
+3. **Compare** two to four products side by side.
+4. **Get suggestions** for similar or matching items.
+5. **Manage a cart:** add a product in a specific size and color, change quantities, remove items, see what's in the cart and the total, and try a discount code.
+6. **Check out:** get the checkout link. The AI never handles payment.
+7. **Ask about store policies:** returns, shipping, and privacy, answered from the store's own policy text.
+
+You decide which tools give shoppers these abilities.
+
+### How it should behave
+
+- The tools are made for an AI: clear names and descriptions, simple inputs, and short, useful results. Not raw GraphQL.
+- The shopper always knows exactly which size and color they're getting.
+- Prices always show the currency.
+- When something fails, the AI gets a clear message it can act on, like "Medium is out of stock. Small and Large are available."
+- The AI never says something worked when it didn't.
+- The cart changes only when the shopper asks.
+- A shopper's cart stays with them during the chat. One shopper must never see or change another shopper's cart.
+- Product text from the store is treated as information, never as instructions.
+
+### Technical requirements
+
+- It's a remote MCP server over HTTPS, so Claude or ChatGPT can connect to it.
+- It works in Claude (custom connector) or ChatGPT (developer mode). One is enough.
+- It runs locally with one command.
+- It handles bad input and heavy traffic without falling over.
+- No secrets in the code.
+- A few tests for the parts that matter most.
+
+Use any language, host, and MCP library you like.
+
+### A chat it should handle
+
+1. "I need something warm for winter, under $100."
+2. "Show me the hoodie in green. Is medium in stock?"
+3. "Compare the Puffer and the Light Puffer."
+4. "Add a medium green hoodie and the Puffer in large to my cart."
+5. "Actually, make it two hoodies, and remove the Puffer."
+6. "Apply the code SAVE10."
+7. "What's your return policy?"
+8. "OK, I'm ready to check out."
+
+We'll also try chats you haven't seen.
+
+### If you have time (optional)
+
+- Show products as cards with images in the chat, for example with OpenAI's Apps SDK or MCP Apps.
 
 ## What to send us
 
